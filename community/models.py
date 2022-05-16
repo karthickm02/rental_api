@@ -10,6 +10,7 @@ class Community(models.Model):
     created_by = models.IntegerField(default=None, null=True)
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
     users = models.ManyToManyField(User, through="MemberShip", related_name="community")
 
 class MemberShip(models.Model):
@@ -23,7 +24,7 @@ class MemberShip(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
     added_by = models.IntegerField(default=None, null=True)
-    # updated_by = models.IntegerField(default=None, null=True)
+    updated_by = models.IntegerField(default=None, null=True)
     class Meta:
         unique_together = [['user', 'community']]
 

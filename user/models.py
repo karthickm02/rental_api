@@ -6,5 +6,6 @@ class User(models.Model):
     contact_number = models.BigIntegerField(default=None, null=True)
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
 
 

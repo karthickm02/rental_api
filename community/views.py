@@ -14,6 +14,7 @@ def create_community(request):
     community_id = new_community.data.get("id")
     user_id = new_community.data.get("created_by")
     create_membership(community_id, user_id, "1")
+
     return Response(new_community.data)
 
 def create_membership(community_id, user_id, role):
@@ -24,7 +25,6 @@ def create_membership(community_id, user_id, role):
 
 @api_view(["GET"])
 def get_all_community(request):
-    print(request.build_absolute_uri())
     community = Community.objects.all()
     community_list = CommunitySerializer(instance=community, many=True)
     return Response(community_list.data)
@@ -40,11 +40,11 @@ def update_community(request, community_id):
     res = ""
     added_by = request.data["added_by"]
     m = MemberShip.objects.filter(
+        user_id = added_by,
         community_id=community_id,
         role="1"
     )
-    admins = (i.user_id for i in m)
-    if (added_by in admins):
+    if (m.exists()):
         users = request.data["users"]
         for i in users:
             add_user(community_id, i, "2", added_by)
@@ -62,13 +62,23 @@ def add_user(community_id, user_id, role, added_by):
 
 @api_view(['PATCH'])
 def change_user_role(request, community_id):
-    community = Community.objects.get(pk=community_id)
-    role = request.data["role"]
-    user_list = []
-    for i in request.data["users"]:
-        user_list.append(User.objects.get(pk=i))
-        user = User.objects.get(pk=i)
-        m = MemberShip.objects.get(user=user, community=community)
-        m.role = role
-        m.save()
+    updated_by = request.data['updated_by']
+    m = MemberShip.objects.filter(
+        user_id=updated_by,
+        community_id=community_id,
+        role="1"
+    )
+    if (m.exists()):
+        community = Community.objects.get(pk=community_id)
+        role = request.data["role"]
+        user_list = []
+        for i in request.data["users"]:
+            user_list.append(User.objects.get(pk=i))
+            user = User.objects.get(pk=i)
+            m = MemberShip.objects.get(user=user, community=community)
+            m.updated_by = updated_by
+            m.role = role
+            m.save()
+        else:
+            res = "can't change"
     return Response("changed")
