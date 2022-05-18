@@ -3,9 +3,10 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("create_community/", views.create_community),
-    path("get_community/", views.get_all_community),
-    path("get_community/<int:community_id>/", views.get_all_community),
-    path("put_community/<int:community_id>/", views.update_community),
-    path("change/<int:community_id>/", views.change_user_role)
+    path("community/", views.create_community),
+    path("communities/", views.get_all_community),
+    path("community/<int:community_id>/", views.get_community),
+    path("community-update/<int:community_id>/", views.update_community),
+    path("community/add-user/<int:community_id>/", views.user_community),
+    path("community/change-role/<int:community_id>/", views.change_user_role)
 ]

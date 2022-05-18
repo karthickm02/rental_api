@@ -7,7 +7,7 @@ from user.models import User
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
-    user = models.ForeignKey(User,on_delete=models.CASCADE, related_name="products")
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="my_products")
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products")
     community = models.ManyToManyField(Community, related_name="products")
     rate = models.FloatField(default=None)

@@ -5,7 +5,6 @@ from user.models import User
 from .models import Community, MemberShip
 from .serializer import CommunitySerializer, MemeberSerializer
 
-
 @api_view(['POST'])
 def create_community(request):
     new_community = CommunitySerializer(data=request.data)
@@ -14,7 +13,6 @@ def create_community(request):
     community_id = new_community.data.get("id")
     user_id = new_community.data.get("created_by")
     create_membership(community_id, user_id, "1")
-
     return Response(new_community.data)
 
 def create_membership(community_id, user_id, role):
@@ -32,19 +30,27 @@ def get_all_community(request):
 @api_view(["GET"])
 def get_community(request, community_id):
     community = Community.objects.get(pk=community_id)
-    community_list = CommunitySerializer(instance=community, many=True)
+    community_list = CommunitySerializer(instance=community)
     return Response(community_list.data)
 
-@api_view(['PATCH'])
+@api_view(['PUT'])
 def update_community(request, community_id):
+    print(request.data.keys())
+    community = CommunitySerializer(Community.objects.get(pk=community_id), data=request.data, partial=True)
+    community.is_valid(raise_exception=True)
+    community.save()
+    return Response(community.data)
+
+@api_view(['PATCH'])
+def user_community(request, community_id):
     res = ""
     added_by = request.data["added_by"]
     m = MemberShip.objects.filter(
-        user_id = added_by,
+        user_id=added_by,
         community_id=community_id,
         role="1"
     )
-    if (m.exists()):
+    if m.exists():
         users = request.data["users"]
         for i in users:
             add_user(community_id, i, "2", added_by)
@@ -56,12 +62,11 @@ def update_community(request, community_id):
 def add_user(community_id, user_id, role, added_by):
     community = Community.objects.get(pk=community_id)
     user = User.objects.get(pk=user_id)
-    community.users.add(user, through_defaults={'role': role, 'added_by':added_by })
-    # membership = MemberShip(user=user, community=community, role=role)
-    # membership.save()
+    community.users.add(user, through_defaults={'role': role, 'added_by': added_by})
 
 @api_view(['PATCH'])
 def change_user_role(request, community_id):
+    res = ""
     updated_by = request.data['updated_by']
     m = MemberShip.objects.filter(
         user_id=updated_by,
@@ -69,6 +74,7 @@ def change_user_role(request, community_id):
         role="1"
     )
     if (m.exists()):
+        res = "changed"
         community = Community.objects.get(pk=community_id)
         role = request.data["role"]
         user_list = []
@@ -79,6 +85,6 @@ def change_user_role(request, community_id):
             m.updated_by = updated_by
             m.role = role
             m.save()
-        else:
-            res = "can't change"
-    return Response("changed")
+    else:
+        res = "can't change"
+    return Response(res)

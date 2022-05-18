@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'user',
     'community',
     'category',
-    'product'
+    'product',
+    'rent'
 ]
 
 MIDDLEWARE = [
