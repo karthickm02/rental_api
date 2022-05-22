@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -7,13 +8,16 @@ from .serializer import CommunitySerializer, MemeberSerializer
 
 @api_view(['POST'])
 def create_community(request):
-    new_community = CommunitySerializer(data=request.data)
-    new_community.is_valid(raise_exception=True)
-    new_community.save()
-    community_id = new_community.data.get("id")
-    user_id = new_community.data.get("created_by")
-    create_membership(community_id, user_id, "1")
-    return Response(new_community.data)
+    try:
+        new_community = CommunitySerializer(data=request.data)
+        new_community.is_valid(raise_exception=True)
+        new_community.save()
+        community_id = new_community.data.get("id")
+        user_id = new_community.data.get("created_by")
+        create_membership(community_id, user_id, "1")
+        return Response(new_community.data)
+    except ValidationError as error:
+        return Response ({'message': error.message}, status=400)
 
 def create_membership(community_id, user_id, role):
     community = Community.objects.get(pk=community_id)
@@ -29,17 +33,23 @@ def get_all_community(request):
 
 @api_view(["GET"])
 def get_community(request, community_id):
-    community = Community.objects.get(pk=community_id)
-    community_list = CommunitySerializer(instance=community)
-    return Response(community_list.data)
+    try:
+        community = Community.objects.get(pk=community_id)
+        community_list = CommunitySerializer(instance=community)
+        return Response(community_list.data)
+    except ObjectDoesNotExist:
+        Response({'message': 'No such community'}, status=404)
 
 @api_view(['PUT'])
 def update_community(request, community_id):
-    print(request.data.keys())
-    community = CommunitySerializer(Community.objects.get(pk=community_id), data=request.data, partial=True)
-    community.is_valid(raise_exception=True)
-    community.save()
-    return Response(community.data)
+    try:
+        community = CommunitySerializer(Community.objects.get(pk=community_id),
+                                        data=request.data, partial=True)
+        community.is_valid(raise_exception=True)
+        community.save()
+        return Response(community.data)
+    except ObjectDoesNotExist:
+        return Response({'message': 'No such community'}, status=404)
 
 @api_view(['PATCH'])
 def user_community(request, community_id):
@@ -73,7 +83,7 @@ def change_user_role(request, community_id):
         community_id=community_id,
         role="1"
     )
-    if (m.exists()):
+    if m.exists():
         res = "changed"
         community = Community.objects.get(pk=community_id)
         role = request.data["role"]
