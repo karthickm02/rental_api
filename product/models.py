@@ -18,5 +18,6 @@ class Product(models.Model):
     rent_end_date = models.DateTimeField(default=None)
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
+    picture = models.ImageField(upload_to='pictures//', max_length=255, null=True, blank=True)
 
 

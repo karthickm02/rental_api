@@ -1,1 +1,7 @@
-/__pycache__/
+category/__pycache__
+community/__pycache__
+product/__pycache__
+rent/__pycache__
+/pictures/
+migrations
+user/__pycache__
