@@ -5,3 +5,4 @@ rent/__pycache__
 /pictures/
 migrations
 user/__pycache__
+*.log

@@ -25,6 +25,7 @@ class MemberShip(models.Model):
     updated_on = models.DateTimeField(auto_now=True)
     added_by = models.IntegerField(default=None, null=True)
     updated_by = models.IntegerField(default=None, null=True)
+
     class Meta:
         unique_together = [['user', 'community']]
 
