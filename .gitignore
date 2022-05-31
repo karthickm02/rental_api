@@ -1,8 +1,8 @@
-category/__pycache__
-community/__pycache__
-product/__pycache__
-rent/__pycache__
-/pictures/
+category/__pycache__/
+community/__pycache__/
+product/__pycache__/
+rent/__pycache__/
+/images/
 migrations
-user/__pycache__
+user/__pycache__/
 *.log

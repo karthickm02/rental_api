@@ -26,7 +26,7 @@ def create_product(request):
 @api_view(['GET'])
 def get_all_products(request):
     logger.debug('List products method called.')
-    products = ProductInfoSerializer(instance=Product.objects.all(), many=True)
+    products = ProductSerializer(instance=Product.objects.all(), many=True)
     return Response(products.data)
 
 
@@ -44,10 +44,10 @@ def get_product(request, product_id):
 @api_view(['DELETE'])
 def delete_product(request, product_id):
     try:
-        logger.debug('Delete community API called for Id {}'.format(community_id))
+        logger.debug('Delete community API called for Id {}'.format(product_id))
         product = Product.objects.get(pk=product_id)
         product.delete()
-        return Response("deleted")
+        return Response({'message': 'Product Deleted'})
     except ObjectDoesNotExist:
         logger.debug('No product exists for Id {}'.format(product_id))
         return Response({'message': 'No such product'}, status=404)
@@ -57,11 +57,12 @@ def delete_product(request, product_id):
 def update_product(request, product_id):
     try:
         logger.debug('Update product API called for Id {}'.format(product_id))
-        updated_product = ProductSerializer(Product.objects.get(pk=product_id),
+        product = Product.objects.get(pk=product_id)
+        updated_product = ProductSerializer(product,
                                             data=request.data, partial=True)
         updated_product.is_valid(raise_exception=True)
         updated_product.save()
-        return Response(updated_product.data)
+        return Response(ProductInfoSerializer(instance=product).data)
     except ObjectDoesNotExist:
         logger.debug('No product exists for Id {}'.format(product_id))
         return Response({'message': 'No such product'}, status=404)

@@ -18,6 +18,6 @@ class Product(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
     is_global_product = models.BooleanField(default=False)
-    picture = models.ImageField(upload_to='pictures/%y/%m/%d/', max_length=255, null=True, blank=True)
+    picture = models.ImageField(upload_to='images/products/', max_length=255, null=True, blank=True)
 
 

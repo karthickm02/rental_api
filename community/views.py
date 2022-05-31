@@ -5,10 +5,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from product.models import Product
-from product.serializer import ProductSerializer
+from product.serializer import ProductSerializer, ProductInfoSerializer
 from user.models import User
+from user.serializer import UserSerializer
 from .models import Community, MemberShip
-from .serializer import CommunitySerializer, MemeberSerializer, CommunityInfoSerializer
+from .serializer import CommunitySerializer, CommunityInfoSerializer
 
 logger = logging.getLogger('root')
 
@@ -41,9 +42,9 @@ def create_membership(community_id, user, role):
 @api_view(["GET"])
 def get_all_community(request):
     logger.debug('List communities method called.')
-    community = Community.objects.all()
-    community_list = CommunityInfoSerializer(instance=community, many=True)
-    return Response(community_list.data)
+    community = Community.objects.filter(is_active=True)
+    community = CommunityInfoSerializer(instance=community, many=True, fields=("id", "name", "description"))
+    return Response(community.data)
 
 
 @api_view(["GET"])
@@ -51,8 +52,11 @@ def get_community(request, community_id):
     try:
         logger.debug('Get community API called for Id {}'.format(community_id))
         community = Community.objects.get(pk=community_id)
-        community_list = CommunityInfoSerializer(instance=community)
-        return Response(community_list.data)
+        if community.is_active:
+            community = CommunityInfoSerializer(instance=community, fields=("id", "name", "description"))
+        else:
+            raise ObjectDoesNotExist()
+        return Response(community.data)
     except ObjectDoesNotExist:
         logger.debug('No community exists for Id {}'.format(community_id))
         return Response({'message': 'No such community'}, status=404)
@@ -165,8 +169,50 @@ def get_product(request, community_id):
     try:
         logger.debug('Get product from community API called for Id {}'.format(community_id))
         community = Community.objects.get(pk=community_id)
-        product_list = ProductSerializer(instance=community.products, many=True)
+        product_list = ProductSerializer(instance=community.products, many=True,
+                                         fields=('id', 'name', 'owner', 'rate', 'description',
+                                                 'is_available', 'rent_end_date', 'picture'))
         return Response(product_list.data)
     except ObjectDoesNotExist:
         logger.debug('No community exists for Id {}'.format(community_id))
         return Response({'message': 'No such community'}, status=404)
+
+
+@api_view(['PATCH'])
+def activate_community(request, community_id):
+    try:
+        community = Community.objects.get(pk=community_id)
+        community.is_active = True
+        community.save()
+    except ObjectDoesNotExist:
+        logger.debug('No community exists for Id {}'.format(community_id))
+        return Response({'message': 'No such community'}, status=404)
+
+
+@api_view(['DELETE'])
+def delete_community(request, community_id):
+    try:
+        community = Community.objects.get(pk=community_id)
+        community.is_active = False
+        community.save()
+    except ObjectDoesNotExist:
+        logger.debug('No community exists for Id {}'.format(community_id))
+        return Response({'message': 'No such community'}, status=404)
+
+
+@api_view(['GET'])
+def get_admins(request, community_id):
+    try:
+        members = MemberShip.objects.filter(
+            community_id=community_id,
+            role="1"
+        )
+        users = []
+        for member in members:
+            users.append(UserSerializer(instance=member.user,
+                                        fields=("id", "name", "email", "contact_number")).data)
+        return Response(users)
+    except ObjectDoesNotExist:
+        logger.debug('No community exists for Id {}'.format(community_id))
+        return Response({'message': 'No such community'}, status=404)
+
