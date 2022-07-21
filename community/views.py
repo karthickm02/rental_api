@@ -1,15 +1,18 @@
 import logging
 
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
+# from oauth2_provider.contrib.rest_framework import TokenHasScope
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from oauth2_provider.decorators import protected_resource
+
 from product.models import Product
-from product.serializer import ProductSerializer, ProductInfoSerializer
+from product.serializer import ProductSerializer
 from user.models import User
 from user.serializer import UserSerializer
 from .models import Community, MemberShip
-from .serializer import CommunitySerializer, CommunityInfoSerializer
+from .serializer import CommunitySerializer
 
 logger = logging.getLogger('root')
 
@@ -18,7 +21,9 @@ logger = logging.getLogger('root')
 def create_community(request):
     try:
         logger.debug('Create community API called. \nData: {}'.format(request.data))
-        user = User.objects.get(pk=request.data.get("created_by"))
+        user = request.user
+        request.data["created_by"] = user.id
+        # user = User.objects.get(pk=request.data.get("created_by"))
         new_community = CommunitySerializer(data=request.data)
         new_community.is_valid(raise_exception=True)
         new_community.save()
@@ -43,7 +48,7 @@ def create_membership(community_id, user, role):
 def get_all_community(request):
     logger.debug('List communities method called.')
     community = Community.objects.filter(is_active=True)
-    community = CommunityInfoSerializer(instance=community, many=True, fields=("id", "name", "description"))
+    community = CommunitySerializer(instance=community, many=True, fields=("id", "name", "description"))
     return Response(community.data)
 
 
@@ -53,7 +58,7 @@ def get_community(request, community_id):
         logger.debug('Get community API called for Id {}'.format(community_id))
         community = Community.objects.get(pk=community_id)
         if community.is_active:
-            community = CommunityInfoSerializer(instance=community, fields=("id", "name", "description"))
+            community = CommunitySerializer(instance=community, fields=("id", "name", "description"))
         else:
             raise ObjectDoesNotExist()
         return Response(community.data)
@@ -78,7 +83,7 @@ def update_community(request, community_id):
 
 @api_view(['PATCH'])
 def user_community(request, community_id):
-    added_by = request.data["added_by"]
+    added_by = request.user.id
     try:
         logger.debug('Add user to community API called for Id {}'.format(community_id))
         check_user_role(user_id=added_by, community_id=community_id)
@@ -114,7 +119,7 @@ def add_user(community_id, user_id, role, added_by):
 
 @api_view(['PATCH'])
 def change_user_role(request, community_id):
-    updated_by = request.data['updated_by']
+    updated_by = request.user.id
     try:
         logger.debug('Change user role in community API called for Id {}'.format(community_id))
         check_user_role(user_id=updated_by, community_id=community_id)
@@ -142,7 +147,7 @@ def change_user_role(request, community_id):
 
 @api_view(['PATCH'])
 def remove_user(request, community_id):
-    updated_by = request.data['updated_by']
+    updated_by = request.user.id
     try:
         logger.debug('Remove user from community API called for Id {}'.format(community_id))
         check_user_role(user_id=updated_by, community_id=community_id)
@@ -206,6 +211,22 @@ def get_admins(request, community_id):
         members = MemberShip.objects.filter(
             community_id=community_id,
             role="1"
+        )
+        users = []
+        for member in members:
+            users.append(UserSerializer(instance=member.user,
+                                        fields=("id", "name", "email", "contact_number")).data)
+        return Response(users)
+    except ObjectDoesNotExist:
+        logger.debug('No community exists for Id {}'.format(community_id))
+        return Response({'message': 'No such community'}, status=404)
+
+
+@api_view(['GET'])
+def get_members(request, community_id):
+    try:
+        members = MemberShip.objects.filter(
+            community_id=community_id,
         )
         users = []
         for member in members:

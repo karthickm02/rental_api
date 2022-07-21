@@ -1,0 +1,54 @@
+version: "3.8"
+services:
+  db:
+      container_name: rental_app_db
+      image: mysql
+      volumes:
+        - ./data/db:/var/lib/mysql
+      environment:
+        - MYSQL_DB=mysql
+#        - MYSQL_USER=root
+        - MYSQL_PASSWORD=root
+        - MYSQL_ROOT_PASSWORD=root
+      ports:
+        - "3307:3306"
+
+  web:
+    container_name: rental_app_web
+    build: .
+#    command: gunicorn rentalcommunityapi.wsgi:application --bind 0.0.0.0:8000
+#    build: .
+    command: bash -c "
+      python manage.py makemigrations
+      && python manage.py migrate
+      && gunicorn rentalcommunityapi.wsgi:application --bind 0.0.0.0:8000 --workers 3
+      "
+#      gunicorn rentalcommunityapi.wsgi:application --bind 0.0.0.0:8000
+
+    volumes:
+      - static:/static
+    ports:
+      - "8000:8000"
+    environment:
+      - MYSQL_NAME=mysql
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - DB_HOST=db
+      - DB_PORT=3306
+    depends_on:
+      - db
+
+  nginx:
+    build: ./nginx
+    volumes:
+      - static:/static
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+
+volumes:
+  static:
+
+#  edgemicro:
+#    keep_alive_timeout: 65000

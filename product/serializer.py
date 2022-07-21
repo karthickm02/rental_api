@@ -7,6 +7,7 @@ from utils.serializer_ import DynamicFieldsModelSerializer
 
 class ProductSerializer(DynamicFieldsModelSerializer):
     rent = RentSerializer(many=True, read_only=True)
+    rent_end_date = serializers.DateTimeField(format="%d/%m/%Y %H:%M")
 
     class Meta:
         model = Product

@@ -21,3 +21,5 @@ class Product(models.Model):
     picture = models.ImageField(upload_to='images/products/', max_length=255, null=True, blank=True)
 
 
+
+

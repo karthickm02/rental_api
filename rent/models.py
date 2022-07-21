@@ -25,7 +25,7 @@ class Rent(models.Model):
     renting_days = models.IntegerField(default=None, null=True)
     status = models.CharField(choices=RESPONSE, default='0', max_length=1)
     id_card_type = models.CharField(choices=CARD_TYPES, default=0, max_length=1)
-    card_number = models.IntegerField(default=None)
+    card_number = models.BigIntegerField(default=None)
     card_image = models.ImageField(upload_to='images/id_card/', max_length=255, null=True, blank=True)
 
 

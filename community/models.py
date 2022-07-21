@@ -13,6 +13,7 @@ class Community(models.Model):
     is_active = models.BooleanField(default=True)
     users = models.ManyToManyField(User, through="MemberShip", related_name="community")
 
+
 class MemberShip(models.Model):
     ROLE_CHOICE = (
         ('1', 'Admin'),
@@ -28,5 +29,3 @@ class MemberShip(models.Model):
 
     class Meta:
         unique_together = [['user', 'community']]
-
-

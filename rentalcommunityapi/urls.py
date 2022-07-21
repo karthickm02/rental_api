@@ -21,6 +21,7 @@ urlpatterns = [
     path("", include("community.urls")),
     path("", include("product.urls")),
     path("", include("rent.urls")),
+    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     path("category/", include("category.urls")),
     path('admin/', admin.site.urls),
 ]

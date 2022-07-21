@@ -12,5 +12,5 @@ urlpatterns = [
     path("community/remove-member/<int:community_id>/", views.remove_user),
     path("community/products/<int:community_id>/", views.get_product),
     path("community/admins/<int:community_id>/", views.get_admins),
-
+    path("community/members/<int:community_id>/", views.get_members),
 ]
